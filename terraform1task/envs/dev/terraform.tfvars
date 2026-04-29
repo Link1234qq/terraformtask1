@@ -1,0 +1,10 @@
+azs                      = ["us-east-1a", "us-east-1b"]
+vpc_name                 = "petclinic-vpc-dev"
+private_subnets          = ["10.0.1.0/24", "10.0.2.0/24"]
+public_subnets           = ["10.0.11.0/24", "10.0.12.0/24"]
+vpc_cidr_block           = "10.0.0.0/20"
+environment              = "dev"
+db_username              = "admin"
+docker_image             = "sargeras147/petclinic:latest"
+asg_max_size             = 1
+permissions_boundary_arn = "arn:aws:iam::977686723731:policy/eo_role_boundary"  

@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euxo pipefail
+
+apt-get update
+apt-get install -y docker.io
+systemctl enable docker
+systemctl start docker
+
+docker rm -f petclinic || true
+docker pull ${docker_image}
+
+docker run -d --name petclinic --restart unless-stopped -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=mysql \
+  -e SPRING_DATASOURCE_URL="${db_url}" \
+  -e SPRING_DATASOURCE_USERNAME="${db_username}" \
+  -e SPRING_DATASOURCE_PASSWORD="${db_password}" \
+  ${docker_image}
