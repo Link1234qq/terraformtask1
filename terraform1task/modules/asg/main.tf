@@ -53,11 +53,11 @@ module "asg" {
   enable_monitoring = true
 
   # IAM role & instance profile
-  create_iam_instance_profile = true
+  create_iam_instance_profile   = true
   iam_role_permissions_boundary = var.permissions_boundary_arn
-  iam_role_name               = "petclinic-${var.environment}-asg-iam-role"
-  iam_role_path               = "/ec2/"
-  iam_role_description        = "IAM role for petclinic-${var.environment}-asg"
+  iam_role_name                 = "petclinic-${var.environment}-asg-iam-role"
+  iam_role_path                 = "/ec2/"
+  iam_role_description          = "IAM role for petclinic-${var.environment}-asg"
   iam_role_tags = {
     CustomIamRole = "petclinic-${var.environment}-asg"
   }
@@ -78,12 +78,12 @@ module "asg" {
   }
 
 
-user_data = base64encode(templatefile("${path.module}/user_data.sh.tftpl", {
-  docker_image = var.docker_image
-  db_url = var.db_url
-  db_username  = var.db_username
-  db_password  = var.db_password
+  user_data = base64encode(templatefile("${path.module}/user_data.sh.tftpl", {
+    docker_image = var.docker_image
+    db_url       = var.db_url
+    db_username  = var.db_username
+    db_password  = var.db_password
     }
-  )
+    )
   )
 }

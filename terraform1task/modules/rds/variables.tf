@@ -1,20 +1,25 @@
 variable "db_subnet_ids" {
-  type = list(string)
+  type        = list(string)
+  description = "Private subnet IDs for the RDS DB subnet group (must be in the same VPC as RDS)"
 }
 
 variable "rds_sg_id" {
-  type = string
+  type        = string
+  description = "Security group ID attached to the RDS instance (typically allows MySQL from ASG)"
 }
 
 variable "environment" {
-  type = string
+  type        = string
+  description = "Deployment environment name (e.g. dev, prod), used for DB naming and tags"
 }
 
 variable "db_username" {
-  type = string
+  type        = string
+  description = "Master username for the RDS MySQL instance"
 }
 
 variable "db_password" {
-  type = string
-  sensitive = true
+  type        = string
+  description = "Master password for the RDS MySQL instance"
+  sensitive   = true
 }
