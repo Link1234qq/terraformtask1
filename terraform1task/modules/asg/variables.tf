@@ -3,6 +3,11 @@ variable "environment" {
   description = "Deployment environment name (e.g. dev, prod), used for naming and tags"
 }
 
+variable "app_name" {
+  type        = string
+  description = "Application base name used for ASG and related resource naming"
+}
+
 variable "asg_sg_id" {
   type        = string
   description = "Security group ID for EC2 instances launched by the Auto Scaling Group"
@@ -45,7 +50,25 @@ variable "permissions_boundary_arn" {
   description = "IAM permissions boundary ARN for the ASG instance role"
 }
 
+variable "instance_type" {
+  type        = string
+  description = "EC2 instance type for ASG instances"
+  default     = "t2.micro"
+}
+
+variable "min_size" {
+  type        = number
+  description = "Minimum number of instances in the Auto Scaling Group"
+  default     = 1
+}
+
 variable "max_size" {
   type        = number
   description = "Maximum number of instances in the Auto Scaling Group"
+}
+
+variable "desired_capacity" {
+  type        = number
+  description = "Desired number of instances in the Auto Scaling Group"
+  default     = 1
 }

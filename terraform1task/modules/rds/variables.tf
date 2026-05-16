@@ -13,6 +13,11 @@ variable "environment" {
   description = "Deployment environment name (e.g. dev, prod), used for DB naming and tags"
 }
 
+variable "app_name" {
+  type        = string
+  description = "Application base name used for RDS naming and DB name composition"
+}
+
 variable "db_username" {
   type        = string
   description = "Master username for the RDS MySQL instance"

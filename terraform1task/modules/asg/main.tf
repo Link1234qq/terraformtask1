@@ -1,89 +1,170 @@
-data "aws_ami" "ubuntu" {
+# Resource naming: snake_case; tier labels for IAM/SG; primary compute resources use "this".
+data "aws_ami" "this" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
+
   filter {
     name   = "name"
     values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
   }
+
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
+
   filter {
     name   = "architecture"
     values = ["x86_64"]
   }
 }
 
-data "aws_caller_identity" "current" {}
-
 locals {
-  permissions_boundary = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/eo_role_boundary"
+  common_tags = {
+    app-name    = var.app_name
+    environment = var.environment
+    managed_by  = "terraform"
+  }
 }
 
-module "asg" {
-  source = "terraform-aws-modules/autoscaling/aws"
+resource "aws_iam_role" "asg" {
+  name                 = "${var.app_name}-${var.environment}-asg-iam-role"
+  path                 = "/ec2/"
+  description          = "IAM role for ${var.app_name}-${var.environment}-asg"
+  permissions_boundary = var.permissions_boundary_arn
 
-  # Autoscaling group
-  name = "petclinic-${var.environment}-asg"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+    }]
+  })
 
-  min_size                  = 1
-  max_size                  = var.max_size
-  desired_capacity          = 1
-  wait_for_capacity_timeout = 0
-  health_check_type         = "ELB"
-  vpc_zone_identifier       = var.public_subnets
+  tags = merge(local.common_tags, {
+    Name          = "${var.app_name}-${var.environment}-asg-iam-role"
+    CustomIamRole = "${var.app_name}-${var.environment}-asg"
+  })
+}
 
-  traffic_source_attachments = {
-    alb = {
-      traffic_source_identifier = var.target_group_arn
-      traffic_source_type       = "elbv2"
-    }
+resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
+  role       = aws_iam_role.asg.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "asg" {
+  name = "${var.app_name}-${var.environment}-asg-instance-profile"
+  path = "/ec2/"
+  role = aws_iam_role.asg.name
+
+  tags = merge(local.common_tags, {
+    Name = "${var.app_name}-${var.environment}-asg-instance-profile"
+  })
+}
+
+resource "aws_launch_template" "this" {
+  name_prefix   = "${var.app_name}-${var.environment}-lt-"
+  description   = "Launch template for ${var.app_name}-${var.environment}-asg"
+  image_id      = data.aws_ami.this.id
+  instance_type = var.instance_type
+
+  vpc_security_group_ids = [var.asg_sg_id]
+
+  iam_instance_profile {
+    arn = aws_iam_instance_profile.asg.arn
   }
 
+  user_data = base64encode(templatefile("${path.module}/user_data.sh.tftpl", {
+    app_name     = var.app_name
+    docker_image = var.docker_image
+    db_url       = var.db_url
+    db_username  = var.db_username
+    db_password  = var.db_password
+  }))
 
-
-  # Launch template
-  launch_template_name        = "petclinic-${var.environment}-asg-launch-template"
-  launch_template_description = "Launch template for petclinic-${var.environment}-asg"
-  update_default_version      = true
-
-  image_id          = data.aws_ami.ubuntu.id
-  instance_type     = "t2.micro"
-  enable_monitoring = true
-
-  # IAM role & instance profile
-  create_iam_instance_profile   = true
-  iam_role_permissions_boundary = var.permissions_boundary_arn
-  iam_role_name                 = "petclinic-${var.environment}-asg-iam-role"
-  iam_role_path                 = "/ec2/"
-  iam_role_description          = "IAM role for petclinic-${var.environment}-asg"
-  iam_role_tags = {
-    CustomIamRole = "petclinic-${var.environment}-asg"
-  }
-  iam_role_policies = {
-    AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  }
-
-  security_groups = [var.asg_sg_id]
-
-
-  # This will ensure imdsv2 is enabled, required, and a single hop which is aws security
-  # best practices
-  # See https://docs.aws.amazon.com/securityhub/latest/userguide/autoscaling-controls.html#autoscaling-4
-  metadata_options = {
+  metadata_options {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 1
   }
 
+  monitoring {
+    enabled = true
+  }
 
-  user_data = base64encode(templatefile("${path.module}/user_data.sh.tftpl", {
-    docker_image = var.docker_image
-    db_url       = var.db_url
-    db_username  = var.db_username
-    db_password  = var.db_password
+  update_default_version = true
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(local.common_tags, {
+      Name = "${var.app_name}-${var.environment}-asg-instance"
+    })
+  }
+
+  tag_specifications {
+    resource_type = "volume"
+    tags = merge(local.common_tags, {
+      Name = "${var.app_name}-${var.environment}-asg-volume"
+    })
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.app_name}-${var.environment}-launch-template"
+  })
+}
+
+resource "aws_autoscaling_group" "this" {
+  name                      = "${var.app_name}-${var.environment}-asg"
+  vpc_zone_identifier       = var.public_subnets
+  target_group_arns         = [var.target_group_arn]
+  health_check_type         = "ELB"
+  health_check_grace_period = 300
+
+  min_size         = var.min_size
+  max_size         = var.max_size
+  desired_capacity = var.desired_capacity
+
+  launch_template {
+    id      = aws_launch_template.this.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "${var.app_name}-${var.environment}-asg"
+    propagate_at_launch = false
+  }
+
+  dynamic "tag" {
+    for_each = local.common_tags
+
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
     }
-    )
-  )
+  }
+
+  dynamic "tag" {
+    for_each = {
+      Name = "${var.app_name}-${var.environment}-asg-instance"
+    }
+
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }

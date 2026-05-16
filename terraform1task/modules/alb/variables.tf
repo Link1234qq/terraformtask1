@@ -3,6 +3,11 @@ variable "environment" {
   description = "Deployment environment name (e.g. dev, prod), used for naming and tags"
 }
 
+variable "app_name" {
+  type        = string
+  description = "Application base name used in ALB and target group naming"
+}
+
 variable "vpc_id" {
   type        = string
   description = "VPC ID where the Application Load Balancer and target group are deployed"

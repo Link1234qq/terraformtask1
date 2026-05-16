@@ -8,7 +8,9 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Local secret vars
+# Local secret vars (per environment)
+envs/secrets.dev.auto.tfvars
+envs/secrets.prod.auto.tfvars
+envs/secrets.stage.auto.tfvars
 envs/dev/secrets.auto.tfvars
-envs/stage/secrets.auto.tfvars
 envs/prod/secrets.auto.tfvars
