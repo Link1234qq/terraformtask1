@@ -42,12 +42,8 @@ variable "managed_by" {
 }
 
 variable "db_username" {
-  type = string
-}
-
-variable "db_password" {
-  type      = string
-  sensitive = true
+  type        = string
+  description = "RDS master username (stored in Secrets Manager with the generated password)"
 }
 
 variable "docker_image" {

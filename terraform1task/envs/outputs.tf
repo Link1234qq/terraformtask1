@@ -42,3 +42,13 @@ output "autoscaling_group_name" {
   value       = module.asg.autoscaling_group_name
   description = "Name of ASG"
 }
+
+output "db_secret_arn" {
+  value       = aws_secretsmanager_secret.db.arn
+  description = "ARN of the Secrets Manager secret with database credentials"
+}
+
+output "db_secret_name" {
+  value       = aws_secretsmanager_secret.db.name
+  description = "Name of the Secrets Manager secret (for AWS CLI / console lookup)"
+}
