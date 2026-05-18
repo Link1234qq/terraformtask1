@@ -1,20 +1,11 @@
-# Resource naming: snake_case; tier labels (alb, asg, rds); rules as {tier}_{purpose}.
-locals {
-  common_tags = {
-    app-name    = var.app_name
-    environment = var.environment
-    managed_by  = "terraform"
-  }
-}
-
 resource "aws_security_group" "alb" {
   name        = "${var.app_name}-${var.environment}-alb-sg"
   description = "Security group for ALB"
   vpc_id      = var.vpc_id
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-alb-sg"
-  })
+  }
 }
 
 resource "aws_security_group" "asg" {
@@ -22,9 +13,9 @@ resource "aws_security_group" "asg" {
   description = "Security group for ASG instances"
   vpc_id      = var.vpc_id
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-asg-sg"
-  })
+  }
 }
 
 resource "aws_security_group" "rds" {
@@ -32,9 +23,9 @@ resource "aws_security_group" "rds" {
   description = "Security group for RDS"
   vpc_id      = var.vpc_id
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-rds-sg"
-  })
+  }
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb_http_from_office" {
@@ -45,9 +36,9 @@ resource "aws_vpc_security_group_ingress_rule" "alb_http_from_office" {
   to_port           = 80
   ip_protocol       = "tcp"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-alb-http-from-office"
-  })
+  }
 }
 
 resource "aws_vpc_security_group_egress_rule" "alb_egress_all" {
@@ -56,9 +47,9 @@ resource "aws_vpc_security_group_egress_rule" "alb_egress_all" {
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-alb-egress-all"
-  })
+  }
 }
 
 resource "aws_vpc_security_group_ingress_rule" "asg_http_from_alb" {
@@ -69,9 +60,9 @@ resource "aws_vpc_security_group_ingress_rule" "asg_http_from_alb" {
   to_port                      = 8080
   ip_protocol                  = "tcp"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-asg-http-from-alb"
-  })
+  }
 }
 
 resource "aws_vpc_security_group_egress_rule" "asg_egress_all" {
@@ -80,9 +71,9 @@ resource "aws_vpc_security_group_egress_rule" "asg_egress_all" {
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-asg-egress-all"
-  })
+  }
 }
 
 resource "aws_vpc_security_group_ingress_rule" "rds_mysql_from_asg" {
@@ -93,9 +84,9 @@ resource "aws_vpc_security_group_ingress_rule" "rds_mysql_from_asg" {
   to_port                      = 3306
   ip_protocol                  = "tcp"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-rds-mysql-from-asg"
-  })
+  }
 }
 
 resource "aws_vpc_security_group_egress_rule" "rds_egress_all" {
@@ -104,7 +95,7 @@ resource "aws_vpc_security_group_egress_rule" "rds_egress_all" {
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-rds-egress-all"
-  })
+  }
 }

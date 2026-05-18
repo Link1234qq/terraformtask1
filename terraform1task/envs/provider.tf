@@ -17,7 +17,7 @@ provider "aws" {
     tags = {
       app-name    = var.app_name
       environment = var.environment
-      managed_by  = "terraform"
+      managed_by  = var.managed_by
     }
   }
 }

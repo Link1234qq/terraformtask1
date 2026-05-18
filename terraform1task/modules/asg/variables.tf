@@ -3,6 +3,11 @@ variable "environment" {
   description = "Deployment environment name (e.g. dev, prod), used for naming and tags"
 }
 
+variable "managed_by" {
+  type        = string
+  description = "Owner or team responsible for resources (mandatory tag)"
+}
+
 variable "app_name" {
   type        = string
   description = "Application base name used for ASG and related resource naming"

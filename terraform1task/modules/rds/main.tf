@@ -1,19 +1,10 @@
-# Resource naming: snake_case; role-based labels (no app name). Primary resource per type uses "this".
-locals {
-  common_tags = {
-    app-name    = var.app_name
-    environment = var.environment
-    managed_by  = "terraform"
-  }
-}
-
 resource "aws_db_subnet_group" "this" {
   name       = "${var.app_name}-${var.environment}-subnet-group"
   subnet_ids = var.db_subnet_ids
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-rds-subnet-group"
-  })
+  }
 }
 
 resource "aws_db_instance" "this" {
@@ -29,7 +20,7 @@ resource "aws_db_instance" "this" {
   skip_final_snapshot    = true
   deletion_protection    = false
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-rds-database"
-  })
+  }
 }

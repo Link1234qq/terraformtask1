@@ -36,6 +36,11 @@ variable "environment" {
   type = string
 }
 
+variable "managed_by" {
+  type        = string
+  description = "Owner or team responsible for resources (mandatory tag)"
+}
+
 variable "db_username" {
   type = string
 }

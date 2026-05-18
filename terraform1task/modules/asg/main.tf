@@ -1,4 +1,3 @@
-# Resource naming: snake_case; tier labels for IAM/SG; primary compute resources use "this".
 data "aws_ami" "this" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
@@ -19,14 +18,6 @@ data "aws_ami" "this" {
   }
 }
 
-locals {
-  common_tags = {
-    app-name    = var.app_name
-    environment = var.environment
-    managed_by  = "terraform"
-  }
-}
-
 resource "aws_iam_role" "asg" {
   name                 = "${var.app_name}-${var.environment}-asg-iam-role"
   path                 = "/ec2/"
@@ -44,10 +35,10 @@ resource "aws_iam_role" "asg" {
     }]
   })
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name          = "${var.app_name}-${var.environment}-asg-iam-role"
     CustomIamRole = "${var.app_name}-${var.environment}-asg"
-  })
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
@@ -60,9 +51,9 @@ resource "aws_iam_instance_profile" "asg" {
   path = "/ec2/"
   role = aws_iam_role.asg.name
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-asg-instance-profile"
-  })
+  }
 }
 
 resource "aws_launch_template" "this" {
@@ -99,25 +90,31 @@ resource "aws_launch_template" "this" {
 
   tag_specifications {
     resource_type = "instance"
-    tags = merge(local.common_tags, {
-      Name = "${var.app_name}-${var.environment}-asg-instance"
-    })
+    tags = {
+      app-name    = var.app_name
+      environment = var.environment
+      managed_by  = var.managed_by
+      Name        = "${var.app_name}-${var.environment}-asg-instance"
+    }
   }
 
   tag_specifications {
     resource_type = "volume"
-    tags = merge(local.common_tags, {
-      Name = "${var.app_name}-${var.environment}-asg-volume"
-    })
+    tags = {
+      app-name    = var.app_name
+      environment = var.environment
+      managed_by  = var.managed_by
+      Name        = "${var.app_name}-${var.environment}-asg-volume"
+    }
   }
 
   lifecycle {
     create_before_destroy = true
   }
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-launch-template"
-  })
+  }
 }
 
 resource "aws_autoscaling_group" "this" {
@@ -143,7 +140,11 @@ resource "aws_autoscaling_group" "this" {
   }
 
   dynamic "tag" {
-    for_each = local.common_tags
+    for_each = {
+      app-name    = var.app_name
+      environment = var.environment
+      managed_by  = var.managed_by
+    }
 
     content {
       key                 = tag.key

@@ -1,12 +1,4 @@
-# Resource naming: snake_case; role-based labels (no app name). Primary resource per type uses "this".
-locals {
-  common_tags = {
-    app-name    = var.app_name
-    environment = var.environment
-    managed_by  = "terraform"
-  }
-}
-
+# Mandatory tags (app-name, environment, managed_by) come from provider default_tags in envs/.
 resource "aws_lb_target_group" "this" {
   name        = "${var.app_name}-${var.environment}-tg"
   port        = 8080
@@ -26,9 +18,9 @@ resource "aws_lb_target_group" "this" {
     unhealthy_threshold = 2
   }
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-tg"
-  })
+  }
 }
 
 resource "aws_lb" "this" {
@@ -38,9 +30,9 @@ resource "aws_lb" "this" {
   security_groups    = [var.alb_sg_id]
   subnets            = var.public_subnets
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-alb"
-  })
+  }
 }
 
 resource "aws_lb_listener" "http" {
@@ -48,9 +40,9 @@ resource "aws_lb_listener" "http" {
   port              = 80
   protocol          = "HTTP"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Name = "${var.app_name}-${var.environment}-alb-listener"
-  })
+  }
 
   default_action {
     type             = "forward"

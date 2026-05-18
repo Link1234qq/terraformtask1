@@ -4,6 +4,7 @@ private_subnets = ["10.10.1.0/24", "10.10.2.0/24"]
 public_subnets  = ["10.10.101.0/24", "10.10.102.0/24"]
 vpc_cidr_block  = "10.10.0.0/16"
 environment     = "prod"
+managed_by      = "Andrii"
 db_username     = "admin"
 docker_image    = "sargeras147/petclinic:latest"
 asg_max_size    = 2

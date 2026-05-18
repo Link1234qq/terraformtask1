@@ -45,6 +45,7 @@ module "asg" {
   source                   = "../modules/asg"
   app_name                 = var.app_name
   environment              = var.environment
+  managed_by               = var.managed_by
   asg_sg_id                = module.security.asg_sg_id
   public_subnets           = module.network.public_subnets
   target_group_arn         = module.alb.target_group_arn
