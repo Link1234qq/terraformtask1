@@ -1,3 +1,5 @@
+data "aws_region" "current" {}
+
 data "aws_ami" "this" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
@@ -46,6 +48,23 @@ resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+resource "aws_iam_role_policy" "db_secret_read" {
+  name = "${var.app_name}-${var.environment}-db-secret-read"
+  role = aws_iam_role.asg.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "secretsmanager:GetSecretValue"
+      Resource = [
+        var.db_secret_arn,
+        "${var.db_secret_arn}-*"
+      ]
+    }]
+  })
+}
+
 resource "aws_iam_instance_profile" "asg" {
   name = "${var.app_name}-${var.environment}-asg-instance-profile"
   path = "/ec2/"
@@ -69,11 +88,11 @@ resource "aws_launch_template" "this" {
   }
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh.tftpl", {
-    app_name     = var.app_name
-    docker_image = var.docker_image
-    db_url       = var.db_url
-    db_username  = var.db_username
-    db_password  = var.db_password
+    app_name       = var.app_name
+    docker_image   = var.docker_image
+    db_url         = var.db_url
+    db_secret_arn  = var.db_secret_arn
+    aws_region     = data.aws_region.current.id
   }))
 
   metadata_options {

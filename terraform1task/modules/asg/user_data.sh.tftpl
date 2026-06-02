@@ -3,10 +3,45 @@ set -euxo pipefail
 
 exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
 
+export DEBIAN_FRONTEND=noninteractive
+
+# Wait for cloud-init / networking (IAM instance profile must be available for Secrets Manager).
+for i in $(seq 1 30); do
+  curl -sf http://169.254.169.254/latest/meta-data/instance-id >/dev/null && break
+  sleep 2
+done
+
 apt-get update
-apt-get install -y docker.io
+apt-get install -y --no-install-recommends docker.io jq ca-certificates curl unzip
 systemctl enable docker
 systemctl start docker
+
+# Ubuntu 24.04 often has no "awscli" apt package; install AWS CLI v2 if missing.
+if ! command -v aws >/dev/null 2>&1; then
+  curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+  unzip -q /tmp/awscliv2.zip -d /tmp
+  /tmp/aws/install --update
+fi
+
+DB_CREDS=""
+for i in $(seq 1 10); do
+  if DB_CREDS=$(aws secretsmanager get-secret-value \
+    --secret-id "${db_secret_arn}" \
+    --region "${aws_region}" \
+    --query SecretString \
+    --output text 2>/dev/null); then
+    break
+  fi
+  sleep 5
+done
+
+if [ -z "$DB_CREDS" ]; then
+  echo "Failed to read DB credentials from Secrets Manager" >&2
+  exit 1
+fi
+
+DB_USER=$(echo "$DB_CREDS" | jq -r '.username')
+DB_PASS=$(echo "$DB_CREDS" | jq -r '.password')
 
 docker rm -f ${app_name} 2>/dev/null || true
 docker pull ${docker_image}
@@ -17,6 +52,8 @@ docker run -d \
   -p 8080:8080 \
   -e SPRING_PROFILES_ACTIVE=mysql \
   -e SPRING_DATASOURCE_URL="${db_url}" \
-  -e SPRING_DATASOURCE_USERNAME="${db_username}" \
-  -e SPRING_DATASOURCE_PASSWORD="${db_password}" \
+  -e SPRING_DATASOURCE_USERNAME="$DB_USER" \
+  -e SPRING_DATASOURCE_PASSWORD="$DB_PASS" \
   ${docker_image}
+
+docker ps

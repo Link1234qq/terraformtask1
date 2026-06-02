@@ -28,8 +28,7 @@ module "rds" {
   db_subnet_ids = module.network.private_subnets
   rds_sg_id     = module.security.rds_sg_id
   environment   = var.environment
-  db_username   = local.db_credentials.username
-  db_password   = local.db_credentials.password
+  db_username   = var.db_username
 }
 
 module "alb" {
@@ -50,8 +49,7 @@ module "asg" {
   public_subnets           = module.network.public_subnets
   target_group_arn         = module.alb.target_group_arn
   db_url                   = "jdbc:mysql://${module.rds.rds_instance_endpoint}/${var.app_name}${var.environment}database"
-  db_username              = local.db_credentials.username
-  db_password              = local.db_credentials.password
+  db_secret_arn            = module.rds.db_secret_arn
   docker_image             = var.docker_image
   permissions_boundary_arn = local.permissions_boundary_arn
   min_size                 = var.asg_min_size

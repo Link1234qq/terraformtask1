@@ -20,11 +20,5 @@ variable "app_name" {
 
 variable "db_username" {
   type        = string
-  description = "Master username for the RDS MySQL instance"
-}
-
-variable "db_password" {
-  type        = string
-  description = "Master password for the RDS MySQL instance"
-  sensitive   = true
+  description = "Master username for the RDS MySQL instance (password is managed by RDS in Secrets Manager)"
 }

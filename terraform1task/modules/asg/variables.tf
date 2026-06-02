@@ -39,15 +39,9 @@ variable "db_url" {
   description = "Spring Boot JDBC URL for MySQL (e.g. jdbc:mysql://host:3306/dbname)"
 }
 
-variable "db_username" {
+variable "db_secret_arn" {
   type        = string
-  description = "Database username passed to the application container"
-}
-
-variable "db_password" {
-  type        = string
-  description = "Database password passed to the application container"
-  sensitive   = true
+  description = "Secrets Manager ARN with RDS credentials (read at instance boot, not stored in Terraform state)"
 }
 
 variable "permissions_boundary_arn" {
