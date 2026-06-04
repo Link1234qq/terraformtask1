@@ -1,16 +1,11 @@
-variable "environment" {
+variable "name_prefix" {
   type        = string
-  description = "Deployment environment name (e.g. dev, prod), used for naming and tags"
-}
-
-variable "managed_by" {
-  type        = string
-  description = "Owner or team responsible for resources (mandatory tag)"
+  description = "Resource name prefix (app_name-environment), composed once in the root module"
 }
 
 variable "app_name" {
   type        = string
-  description = "Application base name used for ASG and related resource naming"
+  description = "Application name for the Docker container (not the AWS resource name prefix)"
 }
 
 variable "asg_sg_id" {
@@ -44,9 +39,9 @@ variable "db_secret_arn" {
   description = "Secrets Manager ARN with RDS credentials (read at instance boot, not stored in Terraform state)"
 }
 
-variable "permissions_boundary_arn" {
+variable "account_id" {
   type        = string
-  description = "IAM permissions boundary ARN for the ASG instance role"
+  description = "AWS account ID (from root module caller identity; used to build IAM permissions boundary ARN)"
 }
 
 variable "instance_type" {

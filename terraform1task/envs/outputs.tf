@@ -47,3 +47,13 @@ output "db_secret_arn" {
   value       = module.rds.db_secret_arn
   description = "ARN of the RDS-managed Secrets Manager secret with database credentials"
 }
+
+output "account_id" {
+  value       = local.account_id
+  description = "AWS account ID (from aws_caller_identity data source in root module)"
+}
+
+output "name_prefix" {
+  value       = local.name_prefix
+  description = "Resource name prefix (app_name-environment) used across all child modules"
+}

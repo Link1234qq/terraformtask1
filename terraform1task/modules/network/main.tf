@@ -1,11 +1,7 @@
-locals {
-  vpc_name = "${var.app_name}-vpc-${var.environment}"
-}
-
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
-  name = local.vpc_name
+  name = var.name_prefix
   cidr = var.vpc_cidr_block
 
   azs             = var.azs
@@ -18,22 +14,22 @@ module "vpc" {
   map_public_ip_on_launch       = true
 
   vpc_tags = {
-    Name = local.vpc_name
+    Name = var.name_prefix
   }
 
   public_subnet_tags = {
-    Name = "${var.app_name}-${var.environment}-public"
+    Name = "${var.name_prefix}-public"
   }
 
   private_subnet_tags = {
-    Name = "${var.app_name}-${var.environment}-private"
+    Name = "${var.name_prefix}-private"
   }
 
   igw_tags = {
-    Name = "${var.app_name}-${var.environment}-igw"
+    Name = var.name_prefix
   }
 
   default_route_table_tags = {
-    Name = "${var.app_name}-${var.environment}-default-rt"
+    Name = var.name_prefix
   }
 }

@@ -19,7 +19,7 @@ variable "azs" {
 
 variable "app_name" {
   type        = string
-  description = "Application base name used for resource naming and tags across all modules"
+  description = "Application base name; combined with environment into name_prefix for all child modules"
 }
 
 variable "private_subnets" {

@@ -1,6 +1,6 @@
 # Mandatory tags (app-name, environment, managed_by) come from provider default_tags in envs/.
 resource "aws_lb_target_group" "this" {
-  name        = "${var.app_name}-${var.environment}-tg"
+  name        = var.name_prefix
   port        = 8080
   protocol    = "HTTP"
   target_type = "instance"
@@ -19,19 +19,19 @@ resource "aws_lb_target_group" "this" {
   }
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-tg"
+    Name = var.name_prefix
   }
 }
 
 resource "aws_lb" "this" {
-  name               = "${var.app_name}-${var.environment}-alb"
+  name               = var.name_prefix
   internal           = false
   load_balancer_type = "application"
   security_groups    = [var.alb_sg_id]
   subnets            = var.public_subnets
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-alb"
+    Name = var.name_prefix
   }
 }
 
@@ -41,7 +41,7 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-alb-listener"
+    Name = var.name_prefix
   }
 
   default_action {

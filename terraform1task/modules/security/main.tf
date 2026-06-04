@@ -1,30 +1,36 @@
+locals {
+  alb_name = "${var.name_prefix}-alb"
+  asg_name = "${var.name_prefix}-asg"
+  rds_name = "${var.name_prefix}-rds"
+}
+
 resource "aws_security_group" "alb" {
-  name        = "${var.app_name}-${var.environment}-alb-sg"
+  name        = local.alb_name
   description = "Security group for ALB"
   vpc_id      = var.vpc_id
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-alb-sg"
+    Name = local.alb_name
   }
 }
 
 resource "aws_security_group" "asg" {
-  name        = "${var.app_name}-${var.environment}-asg-sg"
+  name        = local.asg_name
   description = "Security group for ASG instances"
   vpc_id      = var.vpc_id
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-asg-sg"
+    Name = local.asg_name
   }
 }
 
 resource "aws_security_group" "rds" {
-  name        = "${var.app_name}-${var.environment}-rds-sg"
+  name        = local.rds_name
   description = "Security group for RDS"
   vpc_id      = var.vpc_id
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-rds-sg"
+    Name = local.rds_name
   }
 }
 
@@ -37,18 +43,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb_http_from_office" {
   ip_protocol       = "tcp"
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-alb-http-from-office"
-  }
-}
-
-resource "aws_vpc_security_group_egress_rule" "alb_egress_all" {
-  security_group_id = aws_security_group.alb.id
-  description       = "Allow outbound from ALB"
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
-
-  tags = {
-    Name = "${var.app_name}-${var.environment}-alb-egress-all"
+    Name = "${local.alb_name}-http-from-office"
   }
 }
 
@@ -61,18 +56,7 @@ resource "aws_vpc_security_group_ingress_rule" "asg_http_from_alb" {
   ip_protocol                  = "tcp"
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-asg-http-from-alb"
-  }
-}
-
-resource "aws_vpc_security_group_egress_rule" "asg_egress_all" {
-  security_group_id = aws_security_group.asg.id
-  description       = "Allow outbound from ASG (updates, Docker pull, RDS)"
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
-
-  tags = {
-    Name = "${var.app_name}-${var.environment}-asg-egress-all"
+    Name = "${local.asg_name}-http-from-alb"
   }
 }
 
@@ -85,17 +69,6 @@ resource "aws_vpc_security_group_ingress_rule" "rds_mysql_from_asg" {
   ip_protocol                  = "tcp"
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-rds-mysql-from-asg"
-  }
-}
-
-resource "aws_vpc_security_group_egress_rule" "rds_egress_all" {
-  security_group_id = aws_security_group.rds.id
-  description       = "Allow outbound from RDS"
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
-
-  tags = {
-    Name = "${var.app_name}-${var.environment}-rds-egress-all"
+    Name = "${local.rds_name}-mysql-from-asg"
   }
 }

@@ -1,11 +1,6 @@
-variable "environment" {
+variable "name_prefix" {
   type        = string
-  description = "Deployment environment name (e.g. dev, prod), used for naming and tags"
-}
-
-variable "app_name" {
-  type        = string
-  description = "Application base name used in ALB and target group naming"
+  description = "Resource name prefix (app_name-environment), composed once in the root module"
 }
 
 variable "vpc_id" {

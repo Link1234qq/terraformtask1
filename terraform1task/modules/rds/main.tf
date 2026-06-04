@@ -1,9 +1,13 @@
+locals {
+  name = "${var.name_prefix}-rds"
+}
+
 resource "aws_db_subnet_group" "this" {
-  name       = "${var.app_name}-${var.environment}-subnet-group"
+  name       = local.name
   subnet_ids = var.db_subnet_ids
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-rds-subnet-group"
+    Name = local.name
   }
 }
 
@@ -12,7 +16,7 @@ resource "aws_db_instance" "this" {
   instance_class              = "db.t3.micro"
   allocated_storage           = 20
   storage_type                = "gp2"
-  db_name                     = "${var.app_name}${var.environment}database"
+  db_name                     = var.db_name
   username                    = var.db_username
   manage_master_user_password = true
   db_subnet_group_name        = aws_db_subnet_group.this.name
@@ -21,6 +25,6 @@ resource "aws_db_instance" "this" {
   deletion_protection         = false
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-rds-database"
+    Name = local.name
   }
 }

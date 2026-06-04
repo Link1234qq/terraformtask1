@@ -2,58 +2,56 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  permissions_boundary_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/eo_role_boundary"
+  account_id  = data.aws_caller_identity.current.account_id
+  name_prefix = "${var.app_name}-${var.environment}"
+  db_name     = "${replace(local.name_prefix, "-", "")}database"
 }
 
 module "network" {
   source          = "../modules/network"
-  app_name        = var.app_name
+  name_prefix     = local.name_prefix
   azs             = var.azs
   private_subnets = var.private_subnets
   public_subnets  = var.public_subnets
   vpc_cidr_block  = var.vpc_cidr_block
-  environment     = var.environment
 }
 
 module "security" {
   source      = "../modules/security"
-  app_name    = var.app_name
+  name_prefix = local.name_prefix
   vpc_id      = module.network.vpc_id
-  environment = var.environment
 }
 
 module "rds" {
   source        = "../modules/rds"
-  app_name      = var.app_name
+  name_prefix   = local.name_prefix
+  db_name       = local.db_name
   db_subnet_ids = module.network.private_subnets
   rds_sg_id     = module.security.rds_sg_id
-  environment   = var.environment
   db_username   = var.db_username
 }
 
 module "alb" {
   source         = "../modules/alb"
-  app_name       = var.app_name
-  environment    = var.environment
+  name_prefix    = local.name_prefix
   vpc_id         = module.network.vpc_id
   alb_sg_id      = module.security.alb_sg_id
   public_subnets = module.network.public_subnets
 }
 
 module "asg" {
-  source                   = "../modules/asg"
-  app_name                 = var.app_name
-  environment              = var.environment
-  managed_by               = var.managed_by
-  asg_sg_id                = module.security.asg_sg_id
-  public_subnets           = module.network.public_subnets
-  target_group_arn         = module.alb.target_group_arn
-  db_url                   = "jdbc:mysql://${module.rds.rds_instance_endpoint}/${var.app_name}${var.environment}database"
-  db_secret_arn            = module.rds.db_secret_arn
-  docker_image             = var.docker_image
-  permissions_boundary_arn = local.permissions_boundary_arn
-  min_size                 = var.asg_min_size
-  max_size                 = var.asg_max_size
-  desired_capacity         = var.asg_desired_capacity
-  instance_type            = var.asg_instance_type
+  source           = "../modules/asg"
+  name_prefix      = local.name_prefix
+  app_name         = var.app_name
+  asg_sg_id        = module.security.asg_sg_id
+  public_subnets   = module.network.public_subnets
+  target_group_arn = module.alb.target_group_arn
+  db_url           = "jdbc:mysql://${module.rds.rds_instance_endpoint}/${local.db_name}"
+  db_secret_arn    = module.rds.db_secret_arn
+  docker_image     = var.docker_image
+  account_id       = local.account_id
+  min_size         = var.asg_min_size
+  max_size         = var.asg_max_size
+  desired_capacity = var.asg_desired_capacity
+  instance_type    = var.asg_instance_type
 }

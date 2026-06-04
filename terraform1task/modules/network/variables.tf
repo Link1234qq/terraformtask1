@@ -1,3 +1,8 @@
+variable "name_prefix" {
+  type        = string
+  description = "Resource name prefix (app_name-environment), composed once in the root module"
+}
+
 variable "azs" {
   type        = list(string)
   description = "Availability Zones"
@@ -30,14 +35,4 @@ variable "public_subnets" {
 variable "vpc_cidr_block" {
   type        = string
   description = "The CIDR block for the VPC"
-}
-
-variable "environment" {
-  type        = string
-  description = "The environment"
-}
-
-variable "app_name" {
-  type        = string
-  description = "Application base name used in mandatory resource tags"
 }

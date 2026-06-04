@@ -1,3 +1,8 @@
+locals {
+  permissions_boundary_arn = "arn:aws:iam::${var.account_id}:policy/eo_role_boundary"
+  name                     = "${var.name_prefix}-asg"
+}
+
 data "aws_region" "current" {}
 
 data "aws_ami" "this" {
@@ -21,10 +26,10 @@ data "aws_ami" "this" {
 }
 
 resource "aws_iam_role" "asg" {
-  name                 = "${var.app_name}-${var.environment}-asg-iam-role"
+  name                 = local.name
   path                 = "/ec2/"
-  description          = "IAM role for ${var.app_name}-${var.environment}-asg"
-  permissions_boundary = var.permissions_boundary_arn
+  description          = "IAM role for ${local.name}"
+  permissions_boundary = local.permissions_boundary_arn
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -38,8 +43,7 @@ resource "aws_iam_role" "asg" {
   })
 
   tags = {
-    Name          = "${var.app_name}-${var.environment}-asg-iam-role"
-    CustomIamRole = "${var.app_name}-${var.environment}-asg"
+    Name = local.name
   }
 }
 
@@ -49,7 +53,7 @@ resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
 }
 
 resource "aws_iam_role_policy" "db_secret_read" {
-  name = "${var.app_name}-${var.environment}-db-secret-read"
+  name = "${local.name}-db-secret-read"
   role = aws_iam_role.asg.id
 
   policy = jsonencode({
@@ -66,18 +70,18 @@ resource "aws_iam_role_policy" "db_secret_read" {
 }
 
 resource "aws_iam_instance_profile" "asg" {
-  name = "${var.app_name}-${var.environment}-asg-instance-profile"
+  name = local.name
   path = "/ec2/"
   role = aws_iam_role.asg.name
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-asg-instance-profile"
+    Name = local.name
   }
 }
 
 resource "aws_launch_template" "this" {
-  name_prefix   = "${var.app_name}-${var.environment}-lt-"
-  description   = "Launch template for ${var.app_name}-${var.environment}-asg"
+  name_prefix   = "${local.name}-"
+  description   = "Launch template for ${local.name}"
   image_id      = data.aws_ami.this.id
   instance_type = var.instance_type
 
@@ -88,11 +92,11 @@ resource "aws_launch_template" "this" {
   }
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh.tftpl", {
-    app_name       = var.app_name
-    docker_image   = var.docker_image
-    db_url         = var.db_url
-    db_secret_arn  = var.db_secret_arn
-    aws_region     = data.aws_region.current.id
+    app_name      = var.app_name
+    docker_image  = var.docker_image
+    db_url        = var.db_url
+    db_secret_arn = var.db_secret_arn
+    aws_region    = data.aws_region.current.id
   }))
 
   metadata_options {
@@ -110,20 +114,14 @@ resource "aws_launch_template" "this" {
   tag_specifications {
     resource_type = "instance"
     tags = {
-      app-name    = var.app_name
-      environment = var.environment
-      managed_by  = var.managed_by
-      Name        = "${var.app_name}-${var.environment}-asg-instance"
+      Name = local.name
     }
   }
 
   tag_specifications {
     resource_type = "volume"
     tags = {
-      app-name    = var.app_name
-      environment = var.environment
-      managed_by  = var.managed_by
-      Name        = "${var.app_name}-${var.environment}-asg-volume"
+      Name = local.name
     }
   }
 
@@ -132,12 +130,12 @@ resource "aws_launch_template" "this" {
   }
 
   tags = {
-    Name = "${var.app_name}-${var.environment}-launch-template"
+    Name = local.name
   }
 }
 
 resource "aws_autoscaling_group" "this" {
-  name                      = "${var.app_name}-${var.environment}-asg"
+  name                      = local.name
   vpc_zone_identifier       = var.public_subnets
   target_group_arns         = [var.target_group_arn]
   health_check_type         = "ELB"
@@ -154,27 +152,13 @@ resource "aws_autoscaling_group" "this" {
 
   tag {
     key                 = "Name"
-    value               = "${var.app_name}-${var.environment}-asg"
+    value               = local.name
     propagate_at_launch = false
   }
 
   dynamic "tag" {
     for_each = {
-      app-name    = var.app_name
-      environment = var.environment
-      managed_by  = var.managed_by
-    }
-
-    content {
-      key                 = tag.key
-      value               = tag.value
-      propagate_at_launch = true
-    }
-  }
-
-  dynamic "tag" {
-    for_each = {
-      Name = "${var.app_name}-${var.environment}-asg-instance"
+      Name = local.name
     }
 
     content {

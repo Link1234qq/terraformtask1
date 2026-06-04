@@ -1,16 +1,11 @@
+variable "name_prefix" {
+  type        = string
+  description = "Resource name prefix (app_name-environment), composed once in the root module"
+}
+
 variable "vpc_id" {
   type        = string
   description = "VPC ID where security groups are created"
-}
-
-variable "environment" {
-  type        = string
-  description = "Deployment environment name (e.g. dev, prod), used for tagging"
-}
-
-variable "app_name" {
-  type        = string
-  description = "Application base name used in mandatory resource tags"
 }
 
 variable "alb_ingress_cidr" {
