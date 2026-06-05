@@ -22,3 +22,9 @@ variable "db_username" {
   type        = string
   description = "Master username for the RDS MySQL instance (password is managed by RDS in Secrets Manager)"
 }
+
+variable "multi_az" {
+  type        = bool
+  description = "Enable Multi-AZ deployment for RDS instance"
+  default     = true
+}

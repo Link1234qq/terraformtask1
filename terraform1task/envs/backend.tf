@@ -7,9 +7,9 @@
 #   terraform apply -var-file=prod.tfvars
 terraform {
   backend "s3" {
-    bucket  = "mentoring-state-bucket"
-    region  = "us-east-1"
-    encrypt = true
+    bucket       = "mentoring-state-bucket"
+    region       = "us-east-1"
+    encrypt      = true
     use_lockfile = true
   }
 }

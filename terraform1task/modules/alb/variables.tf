@@ -17,3 +17,14 @@ variable "public_subnets" {
   type        = list(string)
   description = "Public subnet IDs for ALB placement (must span at least two AZs for ALB)"
 }
+
+variable "access_logs_bucket_name" {
+  type        = string
+  description = "S3 bucket name for ALB access logs"
+}
+
+variable "access_logs_prefix" {
+  type        = string
+  description = "Prefix path for ALB access logs"
+  default     = "alb"
+}

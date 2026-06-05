@@ -79,3 +79,15 @@ variable "asg_instance_type" {
   description = "EC2 instance type for ASG instances"
   default     = "t2.micro"
 }
+
+variable "alb_access_logs_bucket_name" {
+  type        = string
+  description = "S3 bucket name for ALB access logs"
+  default     = "mentoring-state-bucket"
+}
+
+variable "alb_access_logs_prefix" {
+  type        = string
+  description = "Prefix path for ALB access logs"
+  default     = "alb"
+}

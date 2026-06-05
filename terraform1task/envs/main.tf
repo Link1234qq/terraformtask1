@@ -29,6 +29,7 @@ module "rds" {
   db_subnet_ids = module.network.private_subnets
   rds_sg_id     = module.security.rds_sg_id
   db_username   = var.db_username
+  multi_az      = var.environment == "prod"
 }
 
 module "alb" {
@@ -37,6 +38,8 @@ module "alb" {
   vpc_id         = module.network.vpc_id
   alb_sg_id      = module.security.alb_sg_id
   public_subnets = module.network.public_subnets
+  access_logs_bucket_name = var.alb_access_logs_bucket_name
+  access_logs_prefix      = var.alb_access_logs_prefix
 }
 
 module "asg" {

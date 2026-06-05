@@ -4,6 +4,7 @@ locals {
   rds_name = "${var.name_prefix}-rds"
 }
 
+#checkov:skip=CKV2_AWS_5:Attached by module.alb as ALB security group.
 resource "aws_security_group" "alb" {
   name        = local.alb_name
   description = "Security group for ALB"
@@ -14,6 +15,7 @@ resource "aws_security_group" "alb" {
   }
 }
 
+#checkov:skip=CKV2_AWS_5:Attached by module.asg launch template.
 resource "aws_security_group" "asg" {
   name        = local.asg_name
   description = "Security group for ASG instances"
@@ -24,6 +26,7 @@ resource "aws_security_group" "asg" {
   }
 }
 
+#checkov:skip=CKV2_AWS_5:Attached by module.rds DB instance.
 resource "aws_security_group" "rds" {
   name        = local.rds_name
   description = "Security group for RDS"

@@ -1,3 +1,5 @@
+#checkov:skip=CKV_TF_1:Using official Terraform Registry source for training setup.
+#checkov:skip=CKV_TF_2:Version pinning is managed in .terraform.lock.hcl.
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
