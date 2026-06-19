@@ -1,0 +1,10 @@
+azs             = ["us-east-1a", "us-east-1b"]
+app_name        = "petclinic"
+private_subnets = ["10.20.1.0/24", "10.20.2.0/24"]
+public_subnets  = ["10.20.11.0/24", "10.20.12.0/24"]
+vpc_cidr_block  = "10.20.0.0/20"
+environment     = "prod"
+managed_by      = "Andrii"
+db_username     = "admin"
+docker_image    = "sargeras147/petclinic:latest"
+asg_max_size    = 2

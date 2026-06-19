@@ -1,0 +1,16 @@
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local secret vars (per environment)
+envs/secrets.dev.auto.tfvars
+envs/secrets.prod.auto.tfvars
+envs/secrets.stage.auto.tfvars
+envs/dev/secrets.auto.tfvars
+envs/prod/secrets.auto.tfvars
